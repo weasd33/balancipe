@@ -1,3 +1,14 @@
 spring:
   application:
     name: balancipe
+  jpa:
+    open-in-view: false
+  batch:
+    job:
+      enabled: false
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
