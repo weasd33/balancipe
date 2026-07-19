@@ -17,6 +17,9 @@ spring:
       host: localhost
       port: 6379
 
+jwt:
+  secret: local-dev-secret-key-change-me-32-bytes-minimum!!
+
 logging:
   level:
     com.beokay.balancipe: DEBUG
