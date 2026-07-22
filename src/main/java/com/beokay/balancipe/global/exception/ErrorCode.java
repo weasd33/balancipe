@@ -21,7 +21,12 @@ public enum ErrorCode {
     INVALID_TOKEN_SIGNATURE(HttpStatus.UNAUTHORIZED, "토큰 서명이 유효하지 않습니다."),
     UNSUPPORTED_TOKEN(HttpStatus.UNAUTHORIZED, "지원하지 않는 토큰 형식입니다."),
     EMPTY_TOKEN(HttpStatus.UNAUTHORIZED, "토큰 값이 비어 있습니다."),
-    INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다.");
+    INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다."),
+
+    // User
+    DUPLICATE_EMAIL(HttpStatus.CONFLICT, "이미 사용 중인 이메일입니다."),
+    DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "이미 사용 중인 닉네임입니다."),
+    INVALID_BIRTH_YEAR(HttpStatus.BAD_REQUEST, "유효하지 않은 출생연도입니다.");
 
     private final HttpStatus status;
     private final String message;

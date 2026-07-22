@@ -64,6 +64,17 @@ public class User extends BaseEntity {
         this.status = UserStatus.ACTIVE;
     }
 
+    public static User create(String email, String encodedPassword, String nickname,
+                               Gender gender, int birthYear) {
+        return User.builder()
+            .email(email)
+            .password(encodedPassword)
+            .nickname(nickname)
+            .gender(gender)
+            .birthYear(birthYear)
+            .build();
+    }
+
     public void updateProfile(String nickname, String profileImageUrl) {
         this.nickname = nickname;
         this.profileImageUrl = profileImageUrl;
