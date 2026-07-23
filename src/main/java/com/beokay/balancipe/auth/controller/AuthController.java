@@ -1,5 +1,7 @@
 package com.beokay.balancipe.auth.controller;
 
+import com.beokay.balancipe.auth.dto.LoginRequest;
+import com.beokay.balancipe.auth.dto.LoginResponse;
 import com.beokay.balancipe.auth.dto.SignUpRequest;
 import com.beokay.balancipe.auth.dto.SignUpResponse;
 import com.beokay.balancipe.auth.service.AuthService;
@@ -28,5 +30,12 @@ public class AuthController {
     public ResponseEntity<ApiResponse<SignUpResponse>> signUp(@Valid @RequestBody SignUpRequest request) {
         SignUpResponse response = authService.signUp(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(response));
+    }
+
+    @Operation(summary = "로그인", description = "이메일/비밀번호로 인증을 수행하고, 성공 시 Access/Refresh Token을 발급한다.")
+    @PostMapping("/login")
+    public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
+        LoginResponse response = authService.login(request);
+        return ResponseEntity.ok(ApiResponse.ok(response));
     }
 }

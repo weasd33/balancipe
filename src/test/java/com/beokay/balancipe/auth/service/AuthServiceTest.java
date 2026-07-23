@@ -1,12 +1,17 @@
 package com.beokay.balancipe.auth.service;
 
+import com.beokay.balancipe.auth.dto.LoginRequest;
+import com.beokay.balancipe.auth.dto.LoginResponse;
 import com.beokay.balancipe.auth.dto.SignUpRequest;
 import com.beokay.balancipe.auth.dto.SignUpResponse;
+import com.beokay.balancipe.auth.fixture.LoginRequestFixture;
 import com.beokay.balancipe.auth.fixture.SignUpRequestFixture;
 import com.beokay.balancipe.global.exception.BusinessException;
 import com.beokay.balancipe.global.exception.ErrorCode;
+import com.beokay.balancipe.global.security.CustomUserDetails;
 import com.beokay.balancipe.global.security.JwtProvider;
 import com.beokay.balancipe.global.security.RefreshTokenRepository;
+import com.beokay.balancipe.user.domain.Gender;
 import com.beokay.balancipe.user.domain.User;
 import com.beokay.balancipe.user.domain.UserRole;
 import com.beokay.balancipe.user.repository.UserRepository;
@@ -15,6 +20,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.LockedException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -43,6 +53,12 @@ class AuthServiceTest {
 
     @Mock
     private RefreshTokenRepository refreshTokenRepository;
+
+    @Mock
+    private AuthenticationManager authenticationManager;
+
+    @Mock
+    private Authentication authentication;
 
     @InjectMocks
     private AuthService authService;
@@ -110,5 +126,55 @@ class AuthServiceTest {
                 .isEqualTo(ErrorCode.INVALID_BIRTH_YEAR);
 
         verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void 로그인에_성공하면_토큰을_발급하고_Redis에_저장한다() {
+        LoginRequest request = LoginRequestFixture.VALID_LOGIN_REQUEST.getRequest();
+
+        User user = User.create("hello@gmail.com", "encoded-password", "홍길동", Gender.MALE, 2000);
+        ReflectionTestUtils.setField(user, "id", 1L);
+        given(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .willReturn(authentication);
+        given(authentication.getPrincipal()).willReturn(new CustomUserDetails(user));
+
+        given(jwtProvider.generateAccessToken(1L, UserRole.USER)).willReturn("access-token");
+        given(jwtProvider.generateRefreshToken(1L)).willReturn("refresh-token");
+
+        LoginResponse response = authService.login(request);
+
+        assertThat(response.userId()).isEqualTo(1L);
+        assertThat(response.nickname()).isEqualTo("홍길동");
+        assertThat(response.accessToken()).isEqualTo("access-token");
+        assertThat(response.refreshToken()).isEqualTo("refresh-token");
+        verify(refreshTokenRepository).save(1L, "refresh-token");
+    }
+
+    @Test
+    void 이메일_또는_비밀번호가_일치하지_않으면_예외를_던진다() {
+        LoginRequest request = LoginRequestFixture.VALID_LOGIN_REQUEST.getRequest();
+        given(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .willThrow(new BadCredentialsException("이메일 또는 비밀번호가 일치하지 않습니다."));
+
+        assertThatThrownBy(() -> authService.login(request))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.INVALID_CREDENTIALS);
+
+        verify(refreshTokenRepository, never()).save(any(), any());
+    }
+
+    @Test
+    void 정지된_계정으로_로그인하면_예외를_던진다() {
+        LoginRequest request = LoginRequestFixture.VALID_LOGIN_REQUEST.getRequest();
+        given(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .willThrow(new LockedException("계정이 잠겨 있습니다."));
+
+        assertThatThrownBy(() -> authService.login(request))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.INVALID_CREDENTIALS);
+
+        verify(refreshTokenRepository, never()).save(any(), any());
     }
 }

@@ -26,7 +26,8 @@ public enum ErrorCode {
     // User
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "이미 사용 중인 이메일입니다."),
     DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "이미 사용 중인 닉네임입니다."),
-    INVALID_BIRTH_YEAR(HttpStatus.BAD_REQUEST, "유효하지 않은 출생연도입니다.");
+    INVALID_BIRTH_YEAR(HttpStatus.BAD_REQUEST, "유효하지 않은 출생연도입니다."),
+    INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "이메일 또는 비밀번호가 일치하지 않습니다.");
 
     private final HttpStatus status;
     private final String message;
