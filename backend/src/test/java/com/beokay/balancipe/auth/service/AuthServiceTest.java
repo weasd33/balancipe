@@ -2,19 +2,24 @@ package com.beokay.balancipe.auth.service;
 
 import com.beokay.balancipe.auth.dto.LoginRequest;
 import com.beokay.balancipe.auth.dto.LoginResponse;
+import com.beokay.balancipe.auth.dto.RefreshRequest;
+import com.beokay.balancipe.auth.dto.RefreshResponse;
 import com.beokay.balancipe.auth.dto.SignUpRequest;
 import com.beokay.balancipe.auth.dto.SignUpResponse;
 import com.beokay.balancipe.auth.fixture.LoginRequestFixture;
+import com.beokay.balancipe.auth.fixture.RefreshRequestFixture;
 import com.beokay.balancipe.auth.fixture.SignUpRequestFixture;
 import com.beokay.balancipe.global.exception.BusinessException;
 import com.beokay.balancipe.global.exception.ErrorCode;
 import com.beokay.balancipe.global.security.CustomUserDetails;
 import com.beokay.balancipe.global.security.JwtProvider;
 import com.beokay.balancipe.global.security.RefreshTokenRepository;
+import com.beokay.balancipe.global.security.TokenType;
 import com.beokay.balancipe.user.domain.Gender;
 import com.beokay.balancipe.user.domain.User;
 import com.beokay.balancipe.user.domain.UserRole;
 import com.beokay.balancipe.user.repository.UserRepository;
+import io.jsonwebtoken.Claims;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -28,6 +33,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.Optional;
+
 import static com.beokay.balancipe.auth.fixture.SignUpRequestFixture.DUPLICATED_EMAIL_REQUEST;
 import static com.beokay.balancipe.auth.fixture.SignUpRequestFixture.DUPLICATED_NICKNAME_REQUEST;
 import static com.beokay.balancipe.auth.fixture.SignUpRequestFixture.FUTURE_BIRTH_YEAR_REQUEST;
@@ -36,6 +43,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -176,5 +184,85 @@ class AuthServiceTest {
                 .isEqualTo(ErrorCode.INVALID_CREDENTIALS);
 
         verify(refreshTokenRepository, never()).save(any(), any());
+    }
+
+    @Test
+    void 재발급에_성공하면_새_Access_Token을_반환한다() {
+        RefreshRequest request = RefreshRequestFixture.VALID_REFRESH_REQUEST.getRequest();
+        Claims claims = mock(Claims.class);
+        User user = User.create("hello@gmail.com", "encoded-password", "홍길동", Gender.MALE, 2000);
+        ReflectionTestUtils.setField(user, "id", 1L);
+
+        given(jwtProvider.parseClaims("refresh-token")).willReturn(claims);
+        given(jwtProvider.getTokenType(claims)).willReturn(TokenType.REFRESH);
+        given(jwtProvider.getUserId(claims)).willReturn(1L);
+        given(refreshTokenRepository.findByUserId(1L)).willReturn(Optional.of("refresh-token"));
+        given(userRepository.findById(1L)).willReturn(Optional.of(user));
+        given(jwtProvider.generateAccessToken(1L, UserRole.USER)).willReturn("new-access-token");
+
+        RefreshResponse response = authService.refresh(request);
+
+        assertThat(response.accessToken()).isEqualTo("new-access-token");
+    }
+
+    @Test
+    void 만료된_리프레시_토큰이면_예외를_던진다() {
+        RefreshRequest request = RefreshRequestFixture.VALID_REFRESH_REQUEST.getRequest();
+        given(jwtProvider.parseClaims("refresh-token"))
+                .willThrow(new BusinessException(ErrorCode.EXPIRED_TOKEN));
+
+        assertThatThrownBy(() -> authService.refresh(request))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.EXPIRED_TOKEN);
+    }
+
+    @Test
+    void 토큰_타입이_REFRESH가_아니면_예외를_던진다() {
+        RefreshRequest request = RefreshRequestFixture.VALID_REFRESH_REQUEST.getRequest();
+        Claims claims = mock(Claims.class);
+        given(jwtProvider.parseClaims("refresh-token")).willReturn(claims);
+        given(jwtProvider.getTokenType(claims)).willReturn(TokenType.ACCESS);
+
+        assertThatThrownBy(() -> authService.refresh(request))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.INVALID_REFRESH_TOKEN);
+
+        verify(userRepository, never()).findById(any());
+    }
+
+    @Test
+    void Redis에_저장된_토큰과_일치하지_않으면_예외를_던진다() {
+        RefreshRequest request = RefreshRequestFixture.VALID_REFRESH_REQUEST.getRequest();
+        Claims claims = mock(Claims.class);
+        given(jwtProvider.parseClaims("refresh-token")).willReturn(claims);
+        given(jwtProvider.getTokenType(claims)).willReturn(TokenType.REFRESH);
+        given(jwtProvider.getUserId(claims)).willReturn(1L);
+        given(refreshTokenRepository.findByUserId(1L)).willReturn(Optional.of("other-refresh-token"));
+
+        assertThatThrownBy(() -> authService.refresh(request))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.INVALID_REFRESH_TOKEN);
+
+        verify(userRepository, never()).findById(any());
+    }
+
+    @Test
+    void Redis에_저장된_토큰이_없으면_예외를_던진다() {
+        RefreshRequest request = RefreshRequestFixture.VALID_REFRESH_REQUEST.getRequest();
+        Claims claims = mock(Claims.class);
+        given(jwtProvider.parseClaims("refresh-token")).willReturn(claims);
+        given(jwtProvider.getTokenType(claims)).willReturn(TokenType.REFRESH);
+        given(jwtProvider.getUserId(claims)).willReturn(1L);
+        given(refreshTokenRepository.findByUserId(1L)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> authService.refresh(request))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.INVALID_REFRESH_TOKEN);
+
+        verify(userRepository, never()).findById(any());
     }
 }

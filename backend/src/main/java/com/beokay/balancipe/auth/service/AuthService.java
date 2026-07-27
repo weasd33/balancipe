@@ -2,6 +2,8 @@ package com.beokay.balancipe.auth.service;
 
 import com.beokay.balancipe.auth.dto.LoginRequest;
 import com.beokay.balancipe.auth.dto.LoginResponse;
+import com.beokay.balancipe.auth.dto.RefreshRequest;
+import com.beokay.balancipe.auth.dto.RefreshResponse;
 import com.beokay.balancipe.auth.dto.SignUpRequest;
 import com.beokay.balancipe.auth.dto.SignUpResponse;
 import com.beokay.balancipe.global.exception.BusinessException;
@@ -9,8 +11,10 @@ import com.beokay.balancipe.global.exception.ErrorCode;
 import com.beokay.balancipe.global.security.CustomUserDetails;
 import com.beokay.balancipe.global.security.JwtProvider;
 import com.beokay.balancipe.global.security.RefreshTokenRepository;
+import com.beokay.balancipe.global.security.TokenType;
 import com.beokay.balancipe.user.domain.User;
 import com.beokay.balancipe.user.repository.UserRepository;
+import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -82,5 +86,25 @@ public class AuthService {
         refreshTokenRepository.save(user.getId(), refreshToken);
 
         return LoginResponse.of(user.getId(), user.getNickname(), accessToken, refreshToken);
+    }
+
+    public RefreshResponse refresh(RefreshRequest request) {
+        Claims claims = jwtProvider.parseClaims(request.refreshToken());
+        if (jwtProvider.getTokenType(claims) != TokenType.REFRESH) {
+            throw new BusinessException(ErrorCode.INVALID_REFRESH_TOKEN);
+        }
+
+        Long userId = jwtProvider.getUserId(claims);
+        String storedRefreshToken = refreshTokenRepository.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_REFRESH_TOKEN));
+        if (!storedRefreshToken.equals(request.refreshToken())) {
+            throw new BusinessException(ErrorCode.INVALID_REFRESH_TOKEN);
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_REFRESH_TOKEN));
+
+        String accessToken = jwtProvider.generateAccessToken(user.getId(), user.getRole());
+        return RefreshResponse.of(accessToken);
     }
 }

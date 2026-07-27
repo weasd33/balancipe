@@ -2,6 +2,8 @@ package com.beokay.balancipe.auth.controller;
 
 import com.beokay.balancipe.auth.dto.LoginRequest;
 import com.beokay.balancipe.auth.dto.LoginResponse;
+import com.beokay.balancipe.auth.dto.RefreshRequest;
+import com.beokay.balancipe.auth.dto.RefreshResponse;
 import com.beokay.balancipe.auth.dto.SignUpRequest;
 import com.beokay.balancipe.auth.dto.SignUpResponse;
 import com.beokay.balancipe.auth.service.AuthService;
@@ -36,6 +38,13 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
         LoginResponse response = authService.login(request);
+        return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    @Operation(summary = "토큰 재발급", description = "Refresh Token을 검증하여 새 Access Token을 발급한다. Refresh Token은 재발급하지 않는다.")
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<RefreshResponse>> refresh(@Valid @RequestBody RefreshRequest request) {
+        RefreshResponse response = authService.refresh(request);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 }
