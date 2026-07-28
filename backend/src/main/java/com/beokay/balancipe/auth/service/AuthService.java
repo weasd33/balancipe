@@ -2,6 +2,7 @@ package com.beokay.balancipe.auth.service;
 
 import com.beokay.balancipe.auth.dto.LoginRequest;
 import com.beokay.balancipe.auth.dto.LoginResponse;
+import com.beokay.balancipe.auth.dto.LogoutRequest;
 import com.beokay.balancipe.auth.dto.RefreshRequest;
 import com.beokay.balancipe.auth.dto.RefreshResponse;
 import com.beokay.balancipe.auth.dto.SignUpRequest;
@@ -106,5 +107,15 @@ public class AuthService {
 
         String accessToken = jwtProvider.generateAccessToken(user.getId(), user.getRole());
         return RefreshResponse.of(accessToken);
+    }
+
+    public void logout(LogoutRequest request) {
+        Claims claims = jwtProvider.parseClaims(request.refreshToken());
+        if (jwtProvider.getTokenType(claims) != TokenType.REFRESH) {
+            throw new BusinessException(ErrorCode.INVALID_REFRESH_TOKEN);
+        }
+
+        Long userId = jwtProvider.getUserId(claims);
+        refreshTokenRepository.deleteByUserId(userId);
     }
 }
