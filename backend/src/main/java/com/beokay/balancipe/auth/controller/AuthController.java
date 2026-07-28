@@ -2,6 +2,7 @@ package com.beokay.balancipe.auth.controller;
 
 import com.beokay.balancipe.auth.dto.LoginRequest;
 import com.beokay.balancipe.auth.dto.LoginResponse;
+import com.beokay.balancipe.auth.dto.LogoutRequest;
 import com.beokay.balancipe.auth.dto.RefreshRequest;
 import com.beokay.balancipe.auth.dto.RefreshResponse;
 import com.beokay.balancipe.auth.dto.SignUpRequest;
@@ -46,5 +47,12 @@ public class AuthController {
     public ResponseEntity<ApiResponse<RefreshResponse>> refresh(@Valid @RequestBody RefreshRequest request) {
         RefreshResponse response = authService.refresh(request);
         return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    @Operation(summary = "로그아웃", description = "Refresh Token을 검증해 사용자를 식별하고, 저장된 세션(Refresh Token)을 삭제한다.")
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(@Valid @RequestBody LogoutRequest request) {
+        authService.logout(request);
+        return ResponseEntity.ok(ApiResponse.ok());
     }
 }

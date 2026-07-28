@@ -2,11 +2,13 @@ package com.beokay.balancipe.auth.service;
 
 import com.beokay.balancipe.auth.dto.LoginRequest;
 import com.beokay.balancipe.auth.dto.LoginResponse;
+import com.beokay.balancipe.auth.dto.LogoutRequest;
 import com.beokay.balancipe.auth.dto.RefreshRequest;
 import com.beokay.balancipe.auth.dto.RefreshResponse;
 import com.beokay.balancipe.auth.dto.SignUpRequest;
 import com.beokay.balancipe.auth.dto.SignUpResponse;
 import com.beokay.balancipe.auth.fixture.LoginRequestFixture;
+import com.beokay.balancipe.auth.fixture.LogoutRequestFixture;
 import com.beokay.balancipe.auth.fixture.RefreshRequestFixture;
 import com.beokay.balancipe.auth.fixture.SignUpRequestFixture;
 import com.beokay.balancipe.global.exception.BusinessException;
@@ -264,5 +266,47 @@ class AuthServiceTest {
                 .isEqualTo(ErrorCode.INVALID_REFRESH_TOKEN);
 
         verify(userRepository, never()).findById(any());
+    }
+
+    @Test
+    void 로그아웃에_성공하면_Redis에서_토큰을_삭제한다() {
+        LogoutRequest request = LogoutRequestFixture.VALID_LOGOUT_REQUEST.getRequest();
+        Claims claims = mock(Claims.class);
+        given(jwtProvider.parseClaims("refresh-token")).willReturn(claims);
+        given(jwtProvider.getTokenType(claims)).willReturn(TokenType.REFRESH);
+        given(jwtProvider.getUserId(claims)).willReturn(1L);
+
+        authService.logout(request);
+
+        verify(refreshTokenRepository).deleteByUserId(1L);
+    }
+
+    @Test
+    void 로그아웃_시_토큰_타입이_REFRESH가_아니면_예외를_던진다() {
+        LogoutRequest request = LogoutRequestFixture.VALID_LOGOUT_REQUEST.getRequest();
+        Claims claims = mock(Claims.class);
+        given(jwtProvider.parseClaims("refresh-token")).willReturn(claims);
+        given(jwtProvider.getTokenType(claims)).willReturn(TokenType.ACCESS);
+
+        assertThatThrownBy(() -> authService.logout(request))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.INVALID_REFRESH_TOKEN);
+
+        verify(refreshTokenRepository, never()).deleteByUserId(any());
+    }
+
+    @Test
+    void 로그아웃_시_만료된_리프레시_토큰이면_예외를_던진다() {
+        LogoutRequest request = LogoutRequestFixture.VALID_LOGOUT_REQUEST.getRequest();
+        given(jwtProvider.parseClaims("refresh-token"))
+                .willThrow(new BusinessException(ErrorCode.EXPIRED_TOKEN));
+
+        assertThatThrownBy(() -> authService.logout(request))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.EXPIRED_TOKEN);
+
+        verify(refreshTokenRepository, never()).deleteByUserId(any());
     }
 }
