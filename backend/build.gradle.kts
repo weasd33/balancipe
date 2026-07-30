@@ -33,6 +33,10 @@ dependencies {
     runtimeOnly("org.postgresql:postgresql")
     testRuntimeOnly("com.h2database:h2")
 
+    // Flyway (DB 마이그레이션, 버전은 Spring Boot BOM이 관리)
+    implementation("org.flywaydb:flyway-core")
+    implementation("org.flywaydb:flyway-database-postgresql")
+
     // Security
     implementation("org.springframework.boot:spring-boot-starter-security")
 

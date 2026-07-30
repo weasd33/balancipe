@@ -13,6 +13,8 @@ spring:
     redis:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT:6379}
+  flyway:
+    baseline-version: 1 # 운영은 users 테이블이 이미 존재하므로 V1(baseline)을 건너뛰고 V2부터 적용
 
 jwt:
   secret: ${JWT_SECRET}

@@ -6,6 +6,12 @@ spring:
   batch:
     job:
       enabled: false
+  flyway:
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    # baseline-version은 프로필별로 다름 (application-local.yml / application-prod.yml 참고):
+    # local은 매 재시작마다 완전히 빈 DB이므로 V1(users 테이블 생성)부터 실제 적용되어야 하고(baseline-version: 0),
+    # prod는 users 테이블이 이미 존재하므로 V1을 건너뛰어야 한다(baseline-version: 1).
 
 springdoc:
   swagger-ui:
