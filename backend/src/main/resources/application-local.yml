@@ -7,7 +7,7 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
@@ -16,6 +16,8 @@ spring:
     redis:
       host: localhost
       port: 6379
+  flyway:
+    baseline-version: 0 # 로컬은 재시작마다 빈 DB이므로 V1(users 테이블 생성)부터 실제 적용
 
 jwt:
   secret: local-dev-secret-key-change-me-32-bytes-minimum!!
