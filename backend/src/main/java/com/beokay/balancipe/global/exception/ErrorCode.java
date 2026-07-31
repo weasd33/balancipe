@@ -28,7 +28,11 @@ public enum ErrorCode {
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "이미 사용 중인 이메일입니다."),
     DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "이미 사용 중인 닉네임입니다."),
     INVALID_BIRTH_YEAR(HttpStatus.BAD_REQUEST, "유효하지 않은 출생연도입니다."),
-    INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "이메일 또는 비밀번호가 일치하지 않습니다.");
+    INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "이메일 또는 비밀번호가 일치하지 않습니다."),
+
+    // Nutrition
+    NUTRITION_REFERENCE_NOT_FOUND(HttpStatus.NOT_FOUND, "요청한 조건에 해당하는 영양소 섭취기준 데이터를 찾을 수 없습니다."),
+    INVALID_PREGNANCY_STATUS(HttpStatus.BAD_REQUEST, "남성에게는 임신/수유 상태를 설정할 수 없습니다.");
 
     private final HttpStatus status;
     private final String message;

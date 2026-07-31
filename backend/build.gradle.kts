@@ -78,6 +78,11 @@ dependencies {
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation("org.springframework.batch:spring-batch-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    // Testcontainers (Repository 통합 테스트, KoreanDietaryReferenceRepositoryTest에서 최초 도입)
+    testImplementation("org.springframework.boot:spring-boot-testcontainers")
+    testImplementation("org.testcontainers:junit-jupiter")
+    testImplementation("org.testcontainers:postgresql")
 }
 
 // Querydsl 생성 소스 경로 등록
