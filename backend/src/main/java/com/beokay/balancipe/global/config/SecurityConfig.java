@@ -43,6 +43,7 @@ public class SecurityConfig {
                 ).permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/recipes/**").permitAll() // 레시피 조회는 비로그인 허용
                 .requestMatchers(HttpMethod.GET, "/api/foods/**").permitAll()   // 식품 검색은 비로그인 허용
+                .requestMatchers(HttpMethod.GET, "/api/nutrition/**").permitAll() // 영양소 섭취기준 조회는 비로그인 허용
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
