@@ -32,7 +32,10 @@ public enum ErrorCode {
 
     // Nutrition
     NUTRITION_REFERENCE_NOT_FOUND(HttpStatus.NOT_FOUND, "요청한 조건에 해당하는 영양소 섭취기준 데이터를 찾을 수 없습니다."),
-    INVALID_PREGNANCY_STATUS(HttpStatus.BAD_REQUEST, "남성에게는 임신/수유 상태를 설정할 수 없습니다.");
+    INVALID_PREGNANCY_STATUS(HttpStatus.BAD_REQUEST, "남성에게는 임신/수유 상태를 설정할 수 없습니다."),
+
+    // Goal
+    NUTRITION_GOAL_NOT_FOUND(HttpStatus.NOT_FOUND, "설정된 영양 목표가 없습니다.");
 
     private final HttpStatus status;
     private final String message;
