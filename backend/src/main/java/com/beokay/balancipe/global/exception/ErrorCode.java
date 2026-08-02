@@ -35,7 +35,8 @@ public enum ErrorCode {
     INVALID_PREGNANCY_STATUS(HttpStatus.BAD_REQUEST, "남성에게는 임신/수유 상태를 설정할 수 없습니다."),
 
     // Goal
-    NUTRITION_GOAL_NOT_FOUND(HttpStatus.NOT_FOUND, "설정된 영양 목표가 없습니다.");
+    NUTRITION_GOAL_NOT_FOUND(HttpStatus.NOT_FOUND, "설정된 영양 목표가 없습니다."),
+    INVALID_NUTRITION_GOAL(HttpStatus.BAD_REQUEST, "유효하지 않은 영양 목표 설정입니다.");
 
     private final HttpStatus status;
     private final String message;
