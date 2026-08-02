@@ -120,6 +120,30 @@ public class UserNutritionGoal extends BaseEntity {
         this.targetDietaryFiber = targetDietaryFiber;
     }
 
+    public void update(PregnancyStatus pregnancyStatus, int referenceYear,
+                        BigDecimal targetCalorie, MacroCalculationMethod macroCalculationMethod,
+                        MacroPresetType macroPresetType, BigDecimal heightCm, BigDecimal currentWeightKg,
+                        BigDecimal targetWeightKg, ActivityLevel activityLevel, BigDecimal weeklyRateKg,
+                        BigDecimal proteinPerKg, BigDecimal fatPerKg, BigDecimal targetCarbohydrate,
+                        BigDecimal targetProtein, BigDecimal targetFat, BigDecimal targetDietaryFiber) {
+        this.pregnancyStatus = pregnancyStatus;
+        this.referenceYear = referenceYear;
+        this.targetCalorie = targetCalorie;
+        this.macroCalculationMethod = macroCalculationMethod;
+        this.macroPresetType = macroPresetType;
+        this.heightCm = heightCm;
+        this.currentWeightKg = currentWeightKg;
+        this.targetWeightKg = targetWeightKg;
+        this.activityLevel = activityLevel;
+        this.weeklyRateKg = weeklyRateKg;
+        this.proteinPerKg = proteinPerKg;
+        this.fatPerKg = fatPerKg;
+        this.targetCarbohydrate = targetCarbohydrate;
+        this.targetProtein = targetProtein;
+        this.targetFat = targetFat;
+        this.targetDietaryFiber = targetDietaryFiber;
+    }
+
     public static UserNutritionGoal create(Long userId, PregnancyStatus pregnancyStatus, int referenceYear,
                                             BigDecimal targetCalorie, MacroCalculationMethod macroCalculationMethod,
                                             MacroPresetType macroPresetType, BigDecimal heightCm, BigDecimal currentWeightKg,
