@@ -3,12 +3,14 @@ package com.beokay.balancipe.goal.service;
 import com.beokay.balancipe.global.exception.BusinessException;
 import com.beokay.balancipe.global.exception.ErrorCode;
 import com.beokay.balancipe.goal.domain.ActivityLevel;
+import com.beokay.balancipe.goal.domain.CalorieGoalCalculator;
 import com.beokay.balancipe.goal.domain.MacroCalculationMethod;
 import com.beokay.balancipe.goal.domain.MacroPresetType;
 import com.beokay.balancipe.goal.domain.NutritionPresetCalculator;
 import com.beokay.balancipe.goal.domain.UserNutritionGoal;
 import com.beokay.balancipe.goal.dto.NutritionGoalResponse;
 import com.beokay.balancipe.goal.dto.NutritionGoalUpdateRequest;
+import com.beokay.balancipe.goal.dto.SuggestedCalorieResponse;
 import com.beokay.balancipe.goal.fixture.NutritionGoalUpdateRequestFixture;
 import com.beokay.balancipe.goal.repository.UserNutritionGoalRepository;
 import com.beokay.balancipe.nutrition.domain.NutrientCode;
@@ -52,8 +54,27 @@ class UserNutritionGoalServiceTest {
     @Mock
     private NutritionPresetCalculator nutritionPresetCalculator;
 
+    @Mock
+    private CalorieGoalCalculator calorieGoalCalculator;
+
     @InjectMocks
     private UserNutritionGoalService userNutritionGoalService;
+
+    @Test
+    void 목표_칼로리를_저장_없이_제안한다() {
+        User user = femaleUser();
+        given(userRepository.findById(1L)).willReturn(Optional.of(user));
+        given(calorieGoalCalculator.calculate(
+                eq(Gender.FEMALE), anyInt(), eq(BigDecimal.valueOf(165)), eq(BigDecimal.valueOf(60)),
+                eq(BigDecimal.valueOf(55)), eq(ActivityLevel.MODERATE), eq(BigDecimal.valueOf(0.5))))
+                .willReturn(BigDecimal.valueOf(1496.39));
+
+        SuggestedCalorieResponse response = userNutritionGoalService.suggestCalorie(
+                1L, BigDecimal.valueOf(165), BigDecimal.valueOf(60), BigDecimal.valueOf(55),
+                ActivityLevel.MODERATE, BigDecimal.valueOf(0.5));
+
+        assertThat(response.suggestedCalorie()).isEqualByComparingTo(BigDecimal.valueOf(1496.39));
+    }
 
     @Test
     void 설정된_영양_목표를_조회한다() {

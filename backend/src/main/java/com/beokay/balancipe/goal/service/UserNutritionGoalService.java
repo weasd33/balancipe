@@ -2,12 +2,15 @@ package com.beokay.balancipe.goal.service;
 
 import com.beokay.balancipe.global.exception.BusinessException;
 import com.beokay.balancipe.global.exception.ErrorCode;
+import com.beokay.balancipe.goal.domain.ActivityLevel;
+import com.beokay.balancipe.goal.domain.CalorieGoalCalculator;
 import com.beokay.balancipe.goal.domain.MacroCalculationMethod;
 import com.beokay.balancipe.goal.domain.MacroPresetType;
 import com.beokay.balancipe.goal.domain.NutritionPresetCalculator;
 import com.beokay.balancipe.goal.domain.UserNutritionGoal;
 import com.beokay.balancipe.goal.dto.NutritionGoalResponse;
 import com.beokay.balancipe.goal.dto.NutritionGoalUpdateRequest;
+import com.beokay.balancipe.goal.dto.SuggestedCalorieResponse;
 import com.beokay.balancipe.goal.repository.UserNutritionGoalRepository;
 import com.beokay.balancipe.nutrition.domain.NutrientCode;
 import com.beokay.balancipe.nutrition.domain.PregnancyStatus;
@@ -35,6 +38,20 @@ public class UserNutritionGoalService {
     private final UserRepository userRepository;
     private final KoreanDietaryReferenceService koreanDietaryReferenceService;
     private final NutritionPresetCalculator nutritionPresetCalculator;
+    private final CalorieGoalCalculator calorieGoalCalculator;
+
+    // 저장 없는 미리보기: CalorieGoalCalculator로 계산만 하고 반환
+    public SuggestedCalorieResponse suggestCalorie(Long userId, BigDecimal heightCm, BigDecimal currentWeightKg,
+                                                     BigDecimal targetWeightKg, ActivityLevel activityLevel,
+                                                     BigDecimal weeklyRateKg) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND));
+        int ageYears = LocalDate.now().getYear() - user.getBirthYear();
+
+        BigDecimal suggestedCalorie = calorieGoalCalculator.calculate(
+                user.getGender(), ageYears, heightCm, currentWeightKg, targetWeightKg, activityLevel, weeklyRateKg);
+        return SuggestedCalorieResponse.of(suggestedCalorie);
+    }
 
     public NutritionGoalResponse getMyGoal(Long userId) {
         UserNutritionGoal goal = userNutritionGoalRepository.findByUserId(userId)
