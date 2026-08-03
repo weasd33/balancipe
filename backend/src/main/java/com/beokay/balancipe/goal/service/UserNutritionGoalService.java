@@ -50,7 +50,7 @@ public class UserNutritionGoalService {
 
         BigDecimal suggestedCalorie = calorieGoalCalculator.calculate(
                 user.getGender(), ageYears, heightCm, currentWeightKg, targetWeightKg, activityLevel, weeklyRateKg);
-        return SuggestedCalorieResponse.of(suggestedCalorie);
+        return SuggestedCalorieResponse.from(suggestedCalorie);
     }
 
     public NutritionGoalResponse getMyGoal(Long userId) {

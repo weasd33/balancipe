@@ -106,7 +106,7 @@ public class AuthService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_REFRESH_TOKEN));
 
         String accessToken = jwtProvider.generateAccessToken(user.getId(), user.getRole());
-        return RefreshResponse.of(accessToken);
+        return RefreshResponse.from(accessToken);
     }
 
     public void logout(LogoutRequest request) {
