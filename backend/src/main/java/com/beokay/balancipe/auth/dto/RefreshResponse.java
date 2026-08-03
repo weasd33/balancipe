@@ -7,7 +7,7 @@ public record RefreshResponse(
         @Schema(description = "Access Token", example = "eyJhbGciOiJIUzI1NiJ9...")
         String accessToken
 ) {
-    public static RefreshResponse of(String accessToken) {
+    public static RefreshResponse from(String accessToken) {
         return new RefreshResponse(accessToken);
     }
 }
